@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Wakgames.Scripts.ApiRequest
+namespace WakSDK.ApiRequest
 {
     /// <summary>
     /// 전체 사용자 통계 조회 결과.

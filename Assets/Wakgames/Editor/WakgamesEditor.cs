@@ -1,8 +1,7 @@
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Wakgames.Scripts;
+using WakSDK;
 
 public class WakgamesEditor : EditorWindow
 {

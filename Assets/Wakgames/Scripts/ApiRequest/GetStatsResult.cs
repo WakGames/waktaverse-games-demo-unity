@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Wakgames.Scripts.ApiRequest
+namespace WakSDK.ApiRequest
 {
     /// <summary>
     /// 통계 목록.

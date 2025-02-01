@@ -1,7 +1,7 @@
 using UnityEngine;
-using Wakgames.Scripts.ApiRequest;
+using WakSDK.ApiRequest;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public class DefaultWakgamesTokenStorage : MonoBehaviour, IWakgamesTokenStorage
     {

@@ -6,9 +6,9 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using UnityEngine;
-using Wakgames.Scripts.ApiRequest;
+using WakSDK.ApiRequest;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public class WakgamesCallbackServer : MonoBehaviour
     {

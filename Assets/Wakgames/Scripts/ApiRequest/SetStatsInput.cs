@@ -2,7 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Wakgames.Scripts.ApiRequest
+namespace WakSDK.ApiRequest
 {
     /// <summary>
     /// 한 통계 입력 정보.
@@ -29,6 +29,10 @@ namespace Wakgames.Scripts.ApiRequest
         /// <summary>
         /// 입력할 통계들.
         /// </summary>
+        public SetStatsInput(string id, int val)
+        {
+            Add(id, val);
+        }
         public List<SetStatsInputItem> stats;
         public void Add(string id, int val)
         {

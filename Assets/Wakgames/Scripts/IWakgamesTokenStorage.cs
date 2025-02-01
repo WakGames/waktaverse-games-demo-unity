@@ -1,4 +1,4 @@
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public interface IWakgamesTokenStorage
     {

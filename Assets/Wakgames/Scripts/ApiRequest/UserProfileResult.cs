@@ -1,4 +1,4 @@
-namespace Wakgames.Scripts.ApiRequest
+namespace WakSDK.ApiRequest
 {
     /// <summary>
     /// 사용자 프로필.

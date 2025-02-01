@@ -1,4 +1,4 @@
-namespace Wakgames.Scripts.ApiRequest
+namespace WakSDK.ApiRequest
 {
     [System.Serializable]
     public class WakgamesToken
