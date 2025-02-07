@@ -101,7 +101,7 @@ public class SampleBehaviour : MonoBehaviour
     {
         PlayerPrefs.SetInt("Counter", _num);
         
-        WakSDK.Wakgames.SetStats("click_cnt", _num, (stat) =>
+        WakSDK.Wakgames.SetStat("click_cnt", _num, (stat) =>
         {
             if (stat != null)
             {

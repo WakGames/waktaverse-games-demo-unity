@@ -194,7 +194,7 @@ namespace WakSDK
 
 
         /// <summary> 토큰을 갱신하고 성공시 저장합니다. </summary>
-        /// <param name="callback">새로 발급된 토큰 정보를 받을 콜백.</param>
+        /// <param name="callback"> 새로 발급된 토큰 정보를 받을 콜백. </param>
         /// <returns></returns>
         public IEnumerator RefreshToken(CallbackDelegate<WakgamesToken> callback)
         {
@@ -234,7 +234,7 @@ namespace WakSDK
         #region Wakgames Profile
         
         /// <summary> 사용자 프로필을 조회합니다. </summary>
-        /// <param name="onProfileComplete">사용자 프로필 정보를 받을 콜백.</param>
+        /// <param name="onProfileComplete"> 사용자 프로필 정보를 받을 콜백. </param>
         /// <returns></returns>
         public static void GetUserProfile(Action<UserProfileResult> onProfileComplete = null)
         {
@@ -244,6 +244,7 @@ namespace WakSDK
             }));
         }
         
+        /// <summary> 프로필 접근 절차 </summary>
         private IEnumerator GetUserProfileProcess(CallbackDelegate<UserProfileResult> callback)
         {
             yield return GetMethod("api/game-link/user/profile", callback);
@@ -272,6 +273,7 @@ namespace WakSDK
             }));
         }
 
+        /// <summary> 도전과제 접근 절차 </summary>
         private IEnumerator GetUnlockedAchievementsProcess(CallbackDelegate<AchievementsResult> callback)
         {
             yield return GetMethod("api/game-link/achieve", callback);
@@ -308,10 +310,7 @@ namespace WakSDK
             }));
         }
 
-        /// <summary> 특정 도전과제가 달성되었음을 기록합니다. </summary>
-        /// <param name="achieveId">도전과제 ID.</param>
-        /// <param name="callback">달성 결과를 받을 콜백.</param>
-        /// <returns></returns>
+        /// <summary> 도잔과제 달성 절차 </summary>
         private IEnumerator UnlockAchievementProcess(string achieveId, CallbackDelegate<SuccessResult> callback)
         {
             // 업적 달성 시, 알람 띄우기
@@ -349,6 +348,7 @@ namespace WakSDK
             }));
         }
         
+        /// <summary> 사용자 통계값 접근 절차 </summary>
         private IEnumerator GetStatsProcess(CallbackDelegate<GetStatsResult> callback)
         {
             yield return GetMethod("api/game-link/stat", callback);
@@ -359,15 +359,16 @@ namespace WakSDK
         /// <param name="statNum">입력할 통계들.</param>
         /// <param name="onStatComplete">통계 입력 결과를 받을 콜백.</param>
         /// <returns></returns>
-        public static void SetStats(string statName, int statNum, Action<SetStatsResult> onStatComplete = null)
+        public static void SetStat(string statName, int statNum, Action<SetStatsResult> onStatComplete = null)
         {
-            Instance.StartCoroutine(Instance.SetStatsProcess(new SetStatsInput(statName, statNum), (stat, resCode) =>
+            Instance.StartCoroutine(Instance.SetStatProcess(new SetStatsInput(statName, statNum), (stat, resCode) =>
             {
                 onStatComplete?.Invoke(stat);
             }));
         }
         
-        private IEnumerator SetStatsProcess(SetStatsInput stats, CallbackDelegate<SetStatsResult> callback)
+        /// <summary> 사용자 통계값 입력 절차 </summary>
+        private IEnumerator SetStatProcess(SetStatsInput stats, CallbackDelegate<SetStatsResult> callback)
         {
             // 업적 달성 시, 알람 띄우기
             callback += (result, responseCode) =>
@@ -390,6 +391,7 @@ namespace WakSDK
             }));
         }
         
+        /// <summary> 전체 사용자 값을 접근 절차 </summary>
         private IEnumerator GetStatBoardProcess(string statId, CallbackDelegate<GetStatBoardResult> callback)
         {
             yield return GetMethod($"api/game-link/stat-board?id={statId}", callback);
