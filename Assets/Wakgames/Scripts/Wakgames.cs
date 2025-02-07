@@ -337,21 +337,38 @@ namespace WakSDK
 
         #region Wakgames Stat
 
-        /// <summary> 사용자의 누적 통계 값들을 얻습니다. </summary>
-        /// <param name="onStatComplete">통계 목록을 받을 콜백.</param>
+        /// <summary> 사용자의 모든 누적 통계 값들을 얻습니다. </summary>
+        /// <param name="onStatsComplete">통계 목록을 받을 콜백.</param>
         /// <returns></returns>
-        public static void GetStats(Action<GetStatsResult> onStatComplete)
+        public static void GetStats(Action<GetStatsResult> onStatsComplete)
         {
             Instance.StartCoroutine(Instance.GetStatsProcess((stat, resCode) =>
             {
-                onStatComplete?.Invoke(stat);
+                onStatsComplete?.Invoke(stat);
             }));
         }
         
-        /// <summary> 사용자 통계값 접근 절차 </summary>
+        /// <summary> 사용자 모든 통계값 접근 절차 </summary>
         private IEnumerator GetStatsProcess(CallbackDelegate<GetStatsResult> callback)
         {
-            yield return GetMethod("api/game-link/stat", callback);
+            yield return GetMethod($"api/game-link/stat", callback);
+        }
+        
+        /// <summary> 사용자의 특정 누적 통계 값을 얻습니다. </summary>
+        /// <param name="onStatComplete">통계를 받을 콜백.</param>
+        /// <returns></returns>
+        public static void GetStat(string statId, Action<GetStatsResult.GetStatsResultItem> onStatComplete)
+        {
+            Instance.StartCoroutine(Instance.GetStatProcess(statId, (stat, resCode) =>
+            {
+                onStatComplete?.Invoke(stat.stats[0]);
+            }));
+        }
+        
+        /// <summary> 사용자 특정 통계값 접근 절차 </summary>
+        private IEnumerator GetStatProcess(string statId, CallbackDelegate<GetStatsResult> callback)
+        {
+            yield return GetMethod($"api/game-link/stat?id={statId}", callback);
         }
 
         /// <summary> 사용자의 대상 통계 값들을 입력합니다. </summary>

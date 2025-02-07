@@ -76,11 +76,10 @@ public class SampleBehaviour : MonoBehaviour
 
     private void LoadClickCount()
     {
-        WakSDK.Wakgames.GetStats((stats) =>
+        WakSDK.Wakgames.GetStat("click_cnt", (stat) =>
         {
-            if (stats != null)
+            if (stat != null)
             {
-                var stat = stats.stats.Find((s) => s.id == "click_cnt");
                 int num = stat?.val ?? 0;
 
                 _num = num;
