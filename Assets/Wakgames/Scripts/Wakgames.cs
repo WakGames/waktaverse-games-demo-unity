@@ -107,7 +107,10 @@ namespace WakSDK
         {
             Instance.StartCoroutine(Instance.LoginProcess((profile, resCode) =>
             {
-                onLoginComplete?.Invoke(profile);
+                if (profile != null)
+                {
+                    onLoginComplete?.Invoke(profile);
+                }
             }));
         }
 
@@ -191,7 +194,6 @@ namespace WakSDK
             /// </summary>
             public bool success;
         }
-
 
         /// <summary> 토큰을 갱신하고 성공시 저장합니다. </summary>
         /// <param name="callback"> 새로 발급된 토큰 정보를 받을 콜백. </param>

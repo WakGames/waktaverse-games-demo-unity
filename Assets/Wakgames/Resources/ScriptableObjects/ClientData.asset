@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d95f525940554694683520553ac186d1, type: 3}
   m_Name: ClientData
   m_EditorClassIdentifier: 
-  ClientID: -id needed-
-  CallbackServerPort: 0
+  ClientID: wakgames_demo
+  CallbackServerPort: 27610
   AchieveAlarmToggle: 1
   AchieveSfxToggle: 1
   AchieveAlarmPosition: -2
