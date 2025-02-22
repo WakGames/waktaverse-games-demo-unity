@@ -23,45 +23,40 @@ public class MenuBehaviour : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(Wakgames.Scripts.Wakgames.Instance.GetUserProfile((profile, _) =>
+        WakSDK.Wakgames.GetUserProfile((profile) =>
         {
             if (profile != null)
             {
                 descText.text = $"{profile.name} 계정으로 로그인 되었습니다.";
                 _loginButtonText.text = "Logout";
-
                 AppendAchievementMessage();
             }
             else
             {
                 descText.text = "로그아웃 상태입니다.";
             }
-        }));
+        });
 
-        StartCoroutine(Wakgames.Scripts.Wakgames.Instance.GetStatBoard("click_cnt", (result, resCode) =>
+        WakSDK.Wakgames.GetStatBoard("click_cnt", (stat) =>
         {
-            if (result != null)
+            if (stat != null)
             {
-                int rank = result.BoardIndex + 1;
+                int rank = stat.BoardIndex + 1;
                 Debug.Log($"현재 등수 : {rank}");
             }
-            else
-            {
-                Debug.LogError($"알 수 없는 오류. (Code : {resCode})");
-            }
-        }));
+        });
     }
 
     private void AppendAchievementMessage()
     {
-        StartCoroutine(Wakgames.Scripts.Wakgames.Instance.GetUnlockedAchievements((result, resCode) =>
+        WakSDK.Wakgames.GetUnlockedAchievements((achievement) =>
         {
-            if (result != null)
+            if (achievement != null)
             {
-                string achieveNames = string.Join(", ", result.achieves.Select((a) => a.name));
-                descText.text += $"\n달성한 도전과제 : {result.size}개\n{achieveNames}";
+                string achieveNames = string.Join(", ", achievement.achieves.Select((a) => a.name));
+                descText.text += $"\n달성한 도전과제 : {achievement.size}개\n{achieveNames}";
             }
-        }));
+        });
     }
 
     private void OnStartButtonClicked()
@@ -73,49 +68,28 @@ public class MenuBehaviour : MonoBehaviour
     {
         if (_loginButtonText.text == "Logout")
         {
-            Wakgames.Scripts.Wakgames.Instance.Logout();
+            WakSDK.Wakgames.Logout();
 
             descText.text = "로그아웃 상태입니다.";
             _loginButtonText.text = "Login";
         }
         else
         {
-            descText.text = "로그인 중입니다.";
-
-            StartCoroutine(Wakgames.Scripts.Wakgames.Instance.StartLogin((profile, resCode) =>
+            WakSDK.Wakgames.Login((profile) =>
             {
-                if (profile == null)
-                {
-                    descText.text = $"로그인에 실패하였습니다. (Code : {resCode})";
-                }
-                else
+                if (profile != null)
                 {
                     descText.text = $"{profile.name} 계정으로 로그인 되었습니다.";
                     _loginButtonText.text = "Logout";
-
                     AppendAchievementMessage();
 
-                    StartCoroutine(Wakgames.Scripts.Wakgames.Instance.UnlockAchievement("first_login", (success, resCode) =>
-                    {
-                        if (success != null)
-                        {
-                            Debug.Log("첫 로그인 도전과제 달성!");
-                        }
-                        else if (resCode == 404)
-                        {
-                            Debug.LogError("존재하지 않는 도전과제.");
-                        }
-                        else if (resCode == 409)
-                        {
-                            Debug.Log("첫 로그인 도전과제 이미 달성됨.");
-                        }
-                        else
-                        {
-                            Debug.LogError($"알 수 없는 오류. (Code : {resCode})");
-                        }
-                    }));
+                    WakSDK.Wakgames.UnlockAchievement("first_login");
                 }
-            }));
+                else
+                {
+                    descText.text = "로그인에 실패하였습니다.";
+                }
+            });
         }
     }
 

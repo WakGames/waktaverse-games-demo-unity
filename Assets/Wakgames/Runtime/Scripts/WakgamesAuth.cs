@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public static class WakgamesAuth
     {

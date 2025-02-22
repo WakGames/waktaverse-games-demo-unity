@@ -3,19 +3,12 @@ using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
-using Wakgames.Scripts.ApiRequest;
+using WakSDK.ApiRequest;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public class Wakgames : MonoBehaviour
     {
-        private enum LoginState : sbyte
-        {
-            Running,
-            Fail,
-            Success,
-        }
-
         /// <summary> API 응답을 받을 콜백. </summary>
         /// <typeparam name="T">응답 형식.</typeparam>
         /// <param name="result">응답 데이터. 없으면 null.</param>
@@ -27,7 +20,7 @@ namespace Wakgames.Scripts
         public const string Host = "https://waktaverse.games";
         private WakgamesCallbackServer _callbackServer = null;
         [SerializeField] private WakgamesAchieve wakgamesAchieve = null;
-    
+
         public static Wakgames Instance
         {
             get
@@ -36,9 +29,11 @@ namespace Wakgames.Scripts
                 {
                     _instance = FindObjectOfType<Wakgames>();
                 }
+
                 return _instance;
             }
         }
+
         private static Wakgames _instance;
 
         /// <summary> 토큰 저장소. 별도로 설정하지 않으면 기본 저장소(PlayerPrefs)를 사용합니다. </summary>
@@ -50,17 +45,21 @@ namespace Wakgames.Scripts
                 {
                     _tokenStorage = gameObject.AddComponent<DefaultWakgamesTokenStorage>();
                 }
+
                 return _tokenStorage;
             }
             set
             {
                 if (_tokenStorage != null && _tokenStorage != value)
                 {
-                    value.UpdateToken(_tokenStorage.GetAccessToken(), _tokenStorage.GetRefreshToken(), _tokenStorage.GetIDToken());
+                    value.UpdateToken(_tokenStorage.GetAccessToken(), _tokenStorage.GetRefreshToken(),
+                        _tokenStorage.GetIDToken());
                 }
+
                 _tokenStorage = value;
             }
         }
+
         private IWakgamesTokenStorage _tokenStorage;
 
         [RuntimeInitializeOnLoadMethod]
@@ -70,6 +69,7 @@ namespace Wakgames.Scripts
             {
                 _instance = Instantiate(Resources.Load<Wakgames>("Prefabs/Wakgames"));
             }
+
             DontDestroyOnLoad(_instance.gameObject);
         }
 
@@ -80,22 +80,42 @@ namespace Wakgames.Scripts
                 Debug.LogError($"유효한 Client ID를 설정해야 합니다.");
                 return;
             }
-        
+
             if (ClientData.CallbackServerPort <= 0)
             {
                 Debug.LogError($"유효한 콜백 서버 포트를 설정해야 합니다.");
                 return;
             }
-            
-            wakgamesAchieve.SetUp(ClientData.AchieveAlarmToggle, ClientData.AchieveAlarmPosition, ClientData.AchieveSfxToggle);
+
+            wakgamesAchieve.SetUp(ClientData.AchieveAlarmToggle, ClientData.AchieveAlarmPosition,
+                ClientData.AchieveSfxToggle);
         }
 
         #region Wakgames Login
 
-        /// <summary> 로그인 절차를 시작합니다. </summary>
-        /// <param name="callback">로그인 완료 후 사용자 정보를 받을 콜백. 실패하면 null.</param>
+        private enum LoginState : sbyte
+        {
+            Running,
+            Fail,
+            Success,
+        }
+        
+        /// <summary> 로그인을 시도합니다. </summary>
+        /// <param name="onLoginComplete">로그인 성공시 리턴되는 플레이어의 프로필</param>
         /// <returns></returns>
-        public IEnumerator StartLogin(CallbackDelegate<UserProfileResult> callback)
+        public static void Login(Action<UserProfileResult> onLoginComplete = null)
+        {
+            Instance.StartCoroutine(Instance.LoginProcess((profile, resCode) =>
+            {
+                if (profile != null)
+                {
+                    onLoginComplete?.Invoke(profile);
+                }
+            }));
+        }
+
+        /// <summary> 로그인 절차 </summary>
+        private IEnumerator LoginProcess(CallbackDelegate<UserProfileResult> callback)
         {
             string csrfState = WakgamesAuth.GenerateCsrfState();
             string codeVerifier = WakgamesAuth.GenerateCodeVerifier();
@@ -113,14 +133,15 @@ namespace Wakgames.Scripts
             _callbackServer.CodeVerifier = codeVerifier;
 
             string callbackUri = Uri.EscapeDataString($"http://localhost:{ClientData.CallbackServerPort}/callback");
-            string authUri = $"{Host}/oauth/authorize?responseType=code&clientId={ClientData.ClientID}&state={csrfState}&callbackUri={callbackUri}&challengeMethod=S256&challenge={codeChallenge}";
+            string authUri =
+                $"{Host}/oauth/authorize?responseType=code&clientId={ClientData.ClientID}&state={csrfState}&callbackUri={callbackUri}&challengeMethod=S256&challenge={codeChallenge}";
             Application.OpenURL(authUri);
 
             yield return new WaitUntil(() => GetLoginState() != LoginState.Running);
-        
+
             EndLogin();
 
-            yield return GetUserProfile(callback);
+            yield return GetUserProfileProcess(callback);
         }
 
         private LoginState GetLoginState()
@@ -144,7 +165,7 @@ namespace Wakgames.Scripts
             }
 
             var token = _callbackServer.UserWakgamesToken;
-        
+
             if (token != null)
             {
                 TokenStorage.UpdateToken(token.accessToken, token.refreshToken, token.idToken);
@@ -154,15 +175,16 @@ namespace Wakgames.Scripts
         }
 
         /// <summary> 저장된 토큰을 삭제하여 로그아웃합니다. </summary>
-        public void Logout()
+        public static void Logout()
         {
-            TokenStorage.ClearToken();
+            Instance.TokenStorage.ClearToken();
         }
 
         #endregion
 
         #region Wakgames API
 
+        #region Wakgames Response
         /// <summary> 단순 성공 응답. </summary>
         [Serializable]
         public class SuccessResult
@@ -174,7 +196,7 @@ namespace Wakgames.Scripts
         }
 
         /// <summary> 토큰을 갱신하고 성공시 저장합니다. </summary>
-        /// <param name="callback">새로 발급된 토큰 정보를 받을 콜백.</param>
+        /// <param name="callback"> 새로 발급된 토큰 정보를 받을 콜백. </param>
         /// <returns></returns>
         public IEnumerator RefreshToken(CallbackDelegate<WakgamesToken> callback)
         {
@@ -205,31 +227,93 @@ namespace Wakgames.Scripts
                     TokenStorage.UpdateToken(token.accessToken, token.refreshToken, token.idToken);
                 }
             }
-        
+
             callback(token, (int)webRequest.responseCode);
         }
+        
+        #endregion
 
+        #region Wakgames Profile
+        
         /// <summary> 사용자 프로필을 조회합니다. </summary>
-        /// <param name="callback">사용자 프로필 정보를 받을 콜백.</param>
+        /// <param name="onProfileComplete"> 사용자 프로필 정보를 받을 콜백. </param>
         /// <returns></returns>
-        public IEnumerator GetUserProfile(CallbackDelegate<UserProfileResult> callback)
+        public static void GetUserProfile(Action<UserProfileResult> onProfileComplete = null)
+        {
+            Instance.StartCoroutine(Instance.GetUserProfileProcess((profile, resCode) =>
+            {
+                onProfileComplete?.Invoke(profile);
+            }));
+        }
+        
+        /// <summary> 프로필 접근 절차 </summary>
+        private IEnumerator GetUserProfileProcess(CallbackDelegate<UserProfileResult> callback)
         {
             yield return GetMethod("api/game-link/user/profile", callback);
         }
-    
+        
+        #endregion
+
+        #region Wakgames Achievement
+
+        public enum AchievementState : sbyte
+        {
+            Success,            // 도전과제 달성
+            AlreadyAchieved,    // 도전과제 이미 달성됨
+            NotFound,           // 존재하지 않는 도전과제
+            Error               // 에러 발생
+        }
+
         /// <summary> 사용자가 달성한 도전과제 목록을 얻습니다. </summary>
-        /// <param name="callback">달성 도전과제 목록을 받을 콜백.</param>
+        /// <param name="onAchievementComplete">달성 도전과제 목록을 받을 콜백.</param>
         /// <returns></returns>
-        public IEnumerator GetUnlockedAchievements(CallbackDelegate<AchievementsResult> callback)
+        public static void GetUnlockedAchievements(Action<AchievementsResult> onAchievementComplete = null)
+        {
+            Instance.StartCoroutine(Instance.GetUnlockedAchievementsProcess((achievement, resCode) =>
+            {
+                onAchievementComplete?.Invoke(achievement);
+            }));
+        }
+
+        /// <summary> 도전과제 접근 절차 </summary>
+        private IEnumerator GetUnlockedAchievementsProcess(CallbackDelegate<AchievementsResult> callback)
         {
             yield return GetMethod("api/game-link/achieve", callback);
         }
-
+        
         /// <summary> 특정 도전과제가 달성되었음을 기록합니다. </summary>
-        /// <param name="achieveId">도전과제 ID.</param>
-        /// <param name="callback">달성 결과를 받을 콜백.</param>
+        /// <param name="achieveId"> 달성될 도전과제의 id </param>
+        /// <param name="onAchieveComplete"> 도전과제의 상태(달성됨, 이미 달성됨, 존재하지 않음) </param>
         /// <returns></returns>
-        public IEnumerator UnlockAchievement(string achieveId, CallbackDelegate<SuccessResult> callback)
+        public static void UnlockAchievement(string achieveId, Action<AchievementState> onAchieveComplete = null)
+        {
+            Instance.StartCoroutine(Instance.UnlockAchievementProcess(achieveId, (result, resCode) =>
+            {
+                if (result != null)
+                {
+                    onAchieveComplete?.Invoke(AchievementState.Success);
+                    Debug.Log($"{achieveId} 도전과제 달성!");
+                }
+                else if (resCode == 404)
+                {
+                    onAchieveComplete?.Invoke(AchievementState.NotFound);
+                    Debug.LogError($"{achieveId}: 존재하지 않는 도전과제.");
+                }
+                else if (resCode == 409)
+                {
+                    onAchieveComplete?.Invoke(AchievementState.AlreadyAchieved);
+                    Debug.Log($"{achieveId} 도전과제 이미 달성됨.");
+                }
+                else
+                {
+                    onAchieveComplete?.Invoke(AchievementState.Error);
+                    Debug.LogError($"알 수 없는 오류. (Code : {resCode})");
+                }
+            }));
+        }
+
+        /// <summary> 도잔과제 달성 절차 </summary>
+        private IEnumerator UnlockAchievementProcess(string achieveId, CallbackDelegate<SuccessResult> callback)
         {
             // 업적 달성 시, 알람 띄우기
             achieveId = Uri.EscapeDataString(achieveId);
@@ -237,11 +321,11 @@ namespace Wakgames.Scripts
             {
                 if (success != null)
                 {
-                    StartCoroutine(GetUnlockedAchievements((result, resCode) =>
+                    GetUnlockedAchievements((achievement) =>
                     {
-                        AchievementsResultItem achieve = result.achieves.Find(item => item.id == achieveId);
+                        AchievementsResultItem achieve = achievement.achieves.Find(item => item.id == achieveId);
                         wakgamesAchieve.AddAlarm(achieve);
-                    }));
+                    });
                 }
                 else
                 {
@@ -251,37 +335,88 @@ namespace Wakgames.Scripts
             yield return PostMethod($"api/game-link/achieve?id={achieveId}", callback);
         }
 
-        /// <summary> 사용자의 누적 통계 값들을 얻습니다. </summary>
-        /// <param name="callback">통계 목록을 받을 콜백.</param>
+        #endregion
+
+        #region Wakgames Stat
+
+        /// <summary> 사용자의 모든 누적 통계 값들을 얻습니다. </summary>
+        /// <param name="onStatsComplete">통계 목록을 받을 콜백.</param>
         /// <returns></returns>
-        public IEnumerator GetStats(CallbackDelegate<GetStatsResult> callback)
+        public static void GetStats(Action<GetStatsResult> onStatsComplete)
         {
-            yield return GetMethod("api/game-link/stat", callback);
+            Instance.StartCoroutine(Instance.GetStatsProcess((stat, resCode) =>
+            {
+                onStatsComplete?.Invoke(stat);
+            }));
         }
-    
-        /// <summary> 사용자의 대상 통계 값들을 입력합니다. </summary>
-        /// <param name="stats">입력할 통계들.</param>
-        /// <param name="callback">통계 입력 결과를 받을 콜백.</param>
+        
+        /// <summary> 사용자 모든 통계값 접근 절차 </summary>
+        private IEnumerator GetStatsProcess(CallbackDelegate<GetStatsResult> callback)
+        {
+            yield return GetMethod($"api/game-link/stat", callback);
+        }
+        
+        /// <summary> 사용자의 특정 누적 통계 값을 얻습니다. </summary>
+        /// <param name="onStatComplete">통계를 받을 콜백.</param>
         /// <returns></returns>
-        public IEnumerator SetStats(SetStatsInput stats, CallbackDelegate<SetStatsResult> callback)
+        public static void GetStat(string statId, Action<GetStatsResult.GetStatsResultItem> onStatComplete)
+        {
+            Instance.StartCoroutine(Instance.GetStatProcess(statId, (stat, resCode) =>
+            {
+                onStatComplete?.Invoke(stat.stats[0]);
+            }));
+        }
+        
+        /// <summary> 사용자 특정 통계값 접근 절차 </summary>
+        private IEnumerator GetStatProcess(string statId, CallbackDelegate<GetStatsResult> callback)
+        {
+            yield return GetMethod($"api/game-link/stat?id={statId}", callback);
+        }
+
+        /// <summary> 사용자의 대상 통계 값들을 입력합니다. </summary>
+        /// <param name="statName">입력할 통계들.</param>
+        /// <param name="statNum">입력할 통계들.</param>
+        /// <param name="onStatComplete">통계 입력 결과를 받을 콜백.</param>
+        /// <returns></returns>
+        public static void SetStat(string statName, int statNum, Action<SetStatsResult> onStatComplete = null)
+        {
+            Instance.StartCoroutine(Instance.SetStatProcess(new SetStatsInput(statName, statNum), (stat, resCode) =>
+            {
+                onStatComplete?.Invoke(stat);
+            }));
+        }
+        
+        /// <summary> 사용자 통계값 입력 절차 </summary>
+        private IEnumerator SetStatProcess(SetStatsInput stats, CallbackDelegate<SetStatsResult> callback)
         {
             // 업적 달성 시, 알람 띄우기
             callback += (result, responseCode) =>
             {
                 StartCoroutine(FindObjectOfType<WakgamesAchieve>().AddAlarms(result.achieves.ToArray()));
             };
-        
+
             yield return PutMethod("api/game-link/stat", JsonUtility.ToJson(stats), callback);
         }
-    
+
         /// <summary> 대상 통계의 전체 사용자 값을 조회합니다. (값 내림차순 정렬됨.) </summary>
         /// <param name="statId">대상 통계 ID.</param>
-        /// <param name="callback">전체 사용자 통계를 받을 콜백.</param>
+        /// <param name="onStatComplete">전체 사용자 통계를 받을 콜백.</param>
         /// <returns></returns>
-        public IEnumerator GetStatBoard(string statId, CallbackDelegate<GetStatBoardResult> callback)
+        public static void GetStatBoard(string statId, Action<GetStatBoardResult> onStatComplete)
+        {
+            Instance.StartCoroutine(Instance.GetStatBoardProcess(statId, (stat, resCode) =>
+            {
+                onStatComplete?.Invoke(stat);
+            }));
+        }
+        
+        /// <summary> 전체 사용자 값을 접근 절차 </summary>
+        private IEnumerator GetStatBoardProcess(string statId, CallbackDelegate<GetStatBoardResult> callback)
         {
             yield return GetMethod($"api/game-link/stat-board?id={statId}", callback);
         }
+
+        #endregion
 
         #endregion
 
@@ -302,7 +437,8 @@ namespace Wakgames.Scripts
             yield return ApiMethod(() => UnityWebRequest.Put($"{Host}/{api}", Encoding.UTF8.GetBytes(body)), callback);
         }
 
-        private IEnumerator ApiMethod<T>(Func<UnityWebRequest> webRequestFactory, CallbackDelegate<T> callback, int maxRetry = 1) where T : class
+        private IEnumerator ApiMethod<T>(Func<UnityWebRequest> webRequestFactory, CallbackDelegate<T> callback,
+            int maxRetry = 1) where T : class
         {
             if (string.IsNullOrEmpty(TokenStorage.GetAccessToken()))
             {
@@ -324,7 +460,7 @@ namespace Wakgames.Scripts
                 callback(result, (int)webRequest.responseCode);
                 yield break;
             }
-        
+
             if (webRequest.responseCode == 401 && maxRetry > 0)
             {
                 WakgamesToken token = null;

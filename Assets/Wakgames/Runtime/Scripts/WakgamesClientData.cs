@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public class WakgamesClientData : ScriptableObject
     {

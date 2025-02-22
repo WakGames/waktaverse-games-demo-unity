@@ -1,11 +1,10 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using Wakgames.Scripts.ApiRequest;
+using WakSDK.ApiRequest;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public class WakgamesAchieve : MonoBehaviour
     {

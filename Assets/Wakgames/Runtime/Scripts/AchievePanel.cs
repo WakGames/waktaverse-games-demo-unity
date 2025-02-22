@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace Wakgames.Scripts
+namespace WakSDK
 {
     public class AchievePanel : MonoBehaviour
     {

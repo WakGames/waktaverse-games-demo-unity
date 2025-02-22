@@ -1,11 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
-using Wakgames.Scripts.ApiRequest;
 
 public class SampleBehaviour : MonoBehaviour
 {
@@ -58,34 +53,33 @@ public class SampleBehaviour : MonoBehaviour
 
     private void UnlockAchievement(string id, string name)
     {
-        StartCoroutine(Wakgames.Scripts.Wakgames.Instance.UnlockAchievement(id, (success, resCode) =>
+        WakSDK.Wakgames.UnlockAchievement(id, (achievement) =>
         {
-            if (success != null)
+            if (achievement == WakSDK.Wakgames.AchievementState.Success)
             {
                 Debug.Log($"{name} 도전과제 달성!");
             }
-            else if (resCode == 404)
+            else if (achievement == WakSDK.Wakgames.AchievementState.NotFound)
             {
                 Debug.LogError("존재하지 않는 도전과제.");
             }
-            else if (resCode == 409)
+            else if (achievement == WakSDK.Wakgames.AchievementState.AlreadyAchieved)
             {
                 Debug.Log($"{name} 도전과제 이미 달성됨.");
             }
             else
             {
-                Debug.LogError($"알 수 없는 오류. (Code : {resCode})");
+                Debug.LogError($"알 수 없는 오류.");
             }
-        }));
+        });
     }
 
     private void LoadClickCount()
     {
-        StartCoroutine(Wakgames.Scripts.Wakgames.Instance.GetStats((stats, resCode) =>
+        WakSDK.Wakgames.GetStat("click_cnt", (stat) =>
         {
-            if (stats != null)
+            if (stat != null)
             {
-                var stat = stats.stats.Find((s) => s.id == "click_cnt");
                 int num = stat?.val ?? 0;
 
                 _num = num;
@@ -96,42 +90,35 @@ public class SampleBehaviour : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"알 수 없는 오류. (Code : {resCode})");
-
                 _num = PlayerPrefs.GetInt("Counter", 0);
                 numText.text = _num.ToString();
             }
-        }));
+        });
     }
 
     private void SaveClickCount()
     {
         PlayerPrefs.SetInt("Counter", _num);
-
-        var stats = new SetStatsInput { { "click_cnt", _num } };
-        StartCoroutine(Wakgames.Scripts.Wakgames.Instance.SetStats(stats, (result, resCode) =>
+        
+        WakSDK.Wakgames.SetStat("click_cnt", _num, (stat) =>
         {
-            if (result != null)
+            if (stat != null)
             {
-                var stat = result.stats.Find((s) => s.id == "click_cnt");
-                if (stat != null)
+                var s = stat.stats.Find((s) => s.id == "click_cnt");
+                if (s != null)
                 {
-                    Debug.Log($"클릭 수 기록됨 : {stat.val}");
+                    Debug.Log($"클릭 수 기록됨 : {s.val}");
                 }
                 else
                 {
                     Debug.LogError($"클릭 수 기록 실패.");
                 }
 
-                foreach (var achieve in result.achieves)
+                foreach (var achieve in stat.achieves)
                 {
                     Debug.Log($"{achieve.name} 도전과제 달성!");
                 }
             }
-            else
-            {
-                Debug.LogError($"알 수 없는 오류. (Code : {resCode})");
-            }
-        }));
+        });
     }
 }

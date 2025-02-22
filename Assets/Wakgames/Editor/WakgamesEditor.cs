@@ -1,8 +1,7 @@
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Wakgames.Scripts;
+using WakSDK;
 
 public class WakgamesEditor : EditorWindow
 {
@@ -24,14 +23,21 @@ public class WakgamesEditor : EditorWindow
     
     public void CreateGUI()
     {
-        Texture2D LogoTex = (Texture2D)Resources.Load("Sprites/Icon+Text(Color)"); //don't put png
+        Texture2D LogoTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Wakgames/Resources/Sprites/Icon+Text(Color).png"); 
         VisualElement ve = new VisualElement();
         Image logoImg = new Image();
         logoImg.image = LogoTex;
         ve.Add(logoImg);
         rootVisualElement.Add(ve);
         
-        _clientData = Resources.Load<WakgamesClientData>("ScriptableObjects/ClientData");
+        _clientData = AssetDatabase.LoadAssetAtPath<WakgamesClientData>("Assets/Wakgames/Resources/ScriptableObjects/ClientData.asset");
+
+        if (_clientData == null)
+        {
+            Debug.LogError("ClientData를 찾을 수 없습니다. 경로와 타입을 확인하세요.");
+            return;
+        }
+        
         _clientIDField = new TextField("클라이언트 ID") //Client ID
         {
             value = _clientData.ClientID
@@ -73,5 +79,10 @@ public class WakgamesEditor : EditorWindow
         _clientData.AchieveAlarmToggle = _achieveAlarmToggle.value;
         _clientData.AchieveSfxToggle = _achieveSfxToggle.value;
         _clientData.AchieveAlarmPosition = (AchievePopupPosition)_achieveAlarmPosition.value;
+        
+        // 변경사항 저장
+        EditorUtility.SetDirty(_clientData);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
     }
 }
