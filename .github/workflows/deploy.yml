@@ -1,0 +1,48 @@
+name: Deploy GameSDK for Unity
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  copy-folders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          path: source-repo
+
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: WakGames/waktaverse-games-sdk-unity
+          path: target-repo
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Copy folders
+        run: |
+          SOURCE_FOLDER="source-repo/Assets/Wakgames"
+          TARGET_FOLDER="target-repo"
+
+          if [ -d "$SOURCE_FOLDER" ]; then
+            echo "Copying contents from $SOURCE_FOLDER to $TARGET_FOLDER"
+            cp -r "$SOURCE_FOLDER"/* "$TARGET_FOLDER/"
+          else
+            echo "Error: Source folder $SOURCE_FOLDER not found"
+            exit 1
+          fi
+
+      - name: Commit and push changes
+        run: |
+          cd target-repo
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add .
+          git status
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Copy Assets/Wakgames from ${{ github.repository }} release ${{ github.event.release.tag_name }}"
+            git push
+          fi
