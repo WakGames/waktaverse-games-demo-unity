@@ -1,7 +1,7 @@
 {
   "name": "com.wakgames.unity-sdk",
   "displayName": "Waktaverse Games SDK",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "unity": "2022.3",
   "description": "Unity 게임을 Waktaverse Games와 연동하기 위한 클라이언트 모듈입니다.",
   "author": {
