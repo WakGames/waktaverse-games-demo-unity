@@ -3,6 +3,7 @@ name: Deploy GameSDK for Unity
 on:
   release:
     types: [created]
+  workflow_dispatch:
 
 jobs:
   copy-folders:
