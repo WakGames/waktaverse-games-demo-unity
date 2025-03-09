@@ -34,6 +34,21 @@ jobs:
             exit 1
           fi
 
+      - name: Update asset path references
+        run: |
+          EDITOR_FILE="target-repo/Editor/WakgamesEditor.cs"
+
+          if [ -f "$EDITOR_FILE" ]; then
+            echo "Updating asset path in $EDITOR_FILE"
+
+            sed -i 's|Assets/Wakgames/Resources/Sprites/Icon+Text(Color).png|Packages/com.wakgames.unity-sdk/Runtime/Resources/Sprites/Icon+Text(Color).png|g' "$EDITOR_FILE"
+            sed -i 's|Assets/Wakgames/Resources/ScriptableObjects/ClientData.asset|Packages/com.wakgames.unity-sdk/Runtime/Resources/ScriptableObjects/ClientData.asset|g' "$EDITOR_FILE"
+
+            echo "File content updated"
+          else
+            echo "Warning: Editor file $EDITOR_FILE not found"
+          fi
+
       - name: Commit and push changes
         run: |
           cd target-repo
