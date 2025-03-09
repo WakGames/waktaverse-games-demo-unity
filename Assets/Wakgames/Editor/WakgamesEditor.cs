@@ -23,14 +23,14 @@ public class WakgamesEditor : EditorWindow
     
     public void CreateGUI()
     {
-        Texture2D LogoTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Wakgames/Resources/Sprites/Icon+Text(Color).png"); 
+        Texture2D LogoTex = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Wakgames/Runtime/Resources/Sprites/Icon+Text(Color).png"); 
         VisualElement ve = new VisualElement();
         Image logoImg = new Image();
         logoImg.image = LogoTex;
         ve.Add(logoImg);
         rootVisualElement.Add(ve);
         
-        _clientData = AssetDatabase.LoadAssetAtPath<WakgamesClientData>("Assets/Wakgames/Resources/ScriptableObjects/ClientData.asset");
+        _clientData = AssetDatabase.LoadAssetAtPath<WakgamesClientData>("Assets/Wakgames/Runtime/Resources/ScriptableObjects/ClientData.asset");
 
         if (_clientData == null)
         {
